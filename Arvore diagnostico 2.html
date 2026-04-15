@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Attractfy Consultoria — Diagnóstico de Processos</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --lilac: #A78BFA; --lilac-light: #F5F3FF; --lilac-mid: #DDD6FE;
+    --ok-fill: #D1FAE5; --ok-stroke: #059669; --ok-text: #065F46;
+    --warn-fill: #FEF3C7; --warn-stroke: #D97706; --warn-text: #92400E;
+    --crit-fill: #FFE4E6; --crit-stroke: #E11D48; --crit-text: #881337;
+    --none-fill: #F8F7FF; --none-stroke: #A78BFA; --none-text: #5B21B6;
+    --bg: #FDF4FF; --surface: #FFFFFF;
+    --border: rgba(167,139,250,0.15); --border-strong: rgba(167,139,250,0.3);
+    --text: #1E1B4B; --text-muted: #7C3AED; --text-light: #C4B5FD;
+    --shadow: 0 2px 12px rgba(167,139,250,0.12);
+  }
+  body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; background-image: radial-gradient(circle at 20% 20%, rgba(244,114,182,0.06) 0%, transparent 50%), radial-gradient(circle at 80% 80%, rgba(96,165,250,0.06) 0%, transparent 50%); }
+  header { background: linear-gradient(135deg, #FDF2F8 0%, #F5F3FF 50%, #EFF6FF 100%); border-bottom: 1px solid var(--border-strong); padding: 14px 24px; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; position: sticky; top: 0; z-index: 50; box-shadow: 0 2px 16px rgba(167,139,250,0.1); }
+  .logo { display: flex; align-items: center; gap: 10px; }
+  .logo-icon { width: 34px; height: 34px; border-radius: 10px; background: linear-gradient(135deg, #F472B6, #A78BFA, #60A5FA); display: flex; align-items: center; justify-content: center; font-size: 16px; }
+  .logo-name { font-size: 15px; font-weight: 700; background: linear-gradient(135deg, #EC4899, #7C3AED, #2563EB); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  .logo-sub { font-size: 11px; color: var(--text-light); font-weight: 500; }
+  .header-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .btn { display: inline-flex; align-items: center; gap: 6px; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 12px; font-weight: 600; padding: 7px 14px; border-radius: 20px; border: 1.5px solid var(--border-strong); background: var(--surface); color: var(--text-muted); cursor: pointer; transition: all 0.2s; }
+  .btn:hover { background: var(--lilac-light); border-color: var(--lilac); transform: translateY(-1px); }
+  .btn-primary { background: linear-gradient(135deg, #F472B6, #A78BFA); color: #fff; border-color: transparent; }
+  .btn-primary:hover { background: linear-gradient(135deg, #EC4899, #7C3AED); transform: translateY(-1px); }
+  .btn-danger { color: #E11D48; border-color: #FECDD3; }
+  .btn-danger:hover { background: #FFE4E6; }
+  .toolbar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 10px 24px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .toolbar input { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 13px; padding: 8px 14px; border: 1.5px solid var(--border-strong); border-radius: 20px; background: var(--lilac-light); color: var(--text); outline: none; transition: all 0.2s; }
+  .toolbar input:focus { border-color: var(--lilac); background: var(--surface); }
+  .toolbar input::placeholder { color: var(--text-light); }
+  #inp-label { flex: 1; min-width: 180px; } #inp-meta, #inp-real { width: 90px; }
+  main { padding: 20px 24px; }
+  #status { font-size: 12px; font-weight: 500; color: var(--text-muted); background: var(--lilac-light); border: 1px solid var(--lilac-mid); border-radius: 12px; padding: 10px 16px; margin-bottom: 16px; min-height: 38px; display: flex; align-items: center; gap: 8px; }
+  #status.alert { background: #FFE4E6; border-color: #FECDD3; color: #E11D48; }
+  #status.ok { background: #D1FAE5; border-color: #A7F3D0; color: #065F46; }
+  .svg-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; box-shadow: var(--shadow); overflow-x: auto; padding: 28px 20px 20px; }
+  #tree-svg { display: block; }
+  .legend { display: flex; gap: 20px; flex-wrap: wrap; margin-top: 16px; font-size: 11px; font-weight: 500; color: var(--text-muted); align-items: center; }
+  .legend-item { display: flex; align-items: center; gap: 5px; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; }
+  #gargalo-panel { display: none; background: var(--surface); border: 1px solid var(--border); border-radius: 16px; box-shadow: var(--shadow); padding: 20px; margin-bottom: 16px; }
+  #gargalo-panel h4 { font-size: 14px; font-weight: 700; margin-bottom: 12px; background: linear-gradient(135deg, #EC4899, #7C3AED); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  .gargalo-item { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+  .gargalo-item:last-child { border-bottom: none; }
+  .gargalo-badge { font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px; min-width: 48px; text-align: center; }
+  .overlay { display: none; position: fixed; inset: 0; background: rgba(91,33,182,0.2); backdrop-filter: blur(4px); z-index: 200; align-items: center; justify-content: center; }
+  .overlay.open { display: flex; }
+  .modal { background: var(--surface); border-radius: 20px; padding: 28px; width: 90%; max-width: 380px; box-shadow: 0 20px 60px rgba(124,58,237,0.2); border: 1px solid var(--lilac-mid); animation: slideUp 0.2s ease; }
+  @keyframes slideUp { from { transform: translateY(20px); opacity:0; } to { transform: translateY(0); opacity:1; } }
+  .modal h3 { font-size: 16px; font-weight: 700; margin-bottom: 16px; background: linear-gradient(135deg, #EC4899, #7C3AED); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  .modal label { font-size: 12px; color: var(--text-muted); display: block; margin-top: 12px; margin-bottom: 4px; font-weight: 600; }
+  .modal input, .modal select { width: 100%; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 13px; padding: 9px 14px; border: 1.5px solid var(--lilac-mid); border-radius: 12px; background: var(--lilac-light); color: var(--text); outline: none; transition: all 0.2s; }
+  .modal input:focus, .modal select:focus { border-color: var(--lilac); }
+  .modal-btns { display: flex; gap: 8px; margin-top: 20px; }
+  .modal-btns button { flex: 1; }
+  .modal-note { font-size: 11px; color: var(--text-muted); margin-top: 12px; background: var(--lilac-light); padding: 10px 12px; border-radius: 10px; line-height: 1.6; border-left: 3px solid var(--lilac); }
+  .node-g { cursor: pointer; }
+  .node-g:hover { filter: brightness(0.94) drop-shadow(0 4px 8px rgba(167,139,250,0.3)); }
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">
+    <div class="logo-icon">🌸</div>
+    <div><div class="logo-name">Attractfy Consultoria</div><div class="logo-sub">Diagnóstico de Processos</div></div>
+  </div>
+  <div class="header-actions">
+    <button class="btn" onclick="exportData()">⬇ Exportar</button>
+    <button class="btn" onclick="document.getElementById('file-import').click()">⬆ Importar</button>
+    <input type="file" id="file-import" accept=".json" style="display:none" onchange="importData(event)"/>
+    <button class="btn btn-danger" onclick="resetTree()">↺ Resetar</button>
+    <button class="btn btn-primary" onclick="analyzeGargalos()">✦ Analisar gargalos</button>
+  </div>
+</header>
+<div class="toolbar">
+  <input id="inp-label" placeholder="Nome da etapa do processo"/>
+  <input id="inp-meta" type="number" placeholder="Meta"/>
+  <input id="inp-real" type="number" placeholder="Real"/>
+  <button class="btn btn-primary" onclick="addNode()">+ Adicionar etapa</button>
+</div>
+<main>
+  <div id="status">✦ Clique em qualquer nó da árvore para editar seus dados.</div>
+  <div id="gargalo-panel"><h4>✦ Análise de Gargalos</h4><div id="gargalo-list"></div></div>
+  <div class="svg-card"><svg id="tree-svg"></svg></div>
+  <div class="legend">
+    <span style="font-weight:700;font-size:12px;color:var(--text)">Legenda:</span>
+    <div class="legend-item"><div class="dot" style="background:#059669"></div> ≥90%</div>
+    <div class="legend-item"><div class="dot" style="background:#D97706"></div> 60–89%</div>
+    <div class="legend-item"><div class="dot" style="background:#E11D48"></div> &lt;60%</div>
+    <div class="legend-item"><div class="dot" style="background:#A78BFA"></div> Sem dados</div>
+  </div>
+</main>
+<div class="overlay" id="overlay" onclick="overlayClick(event)">
+  <div class="modal">
+    <h3 id="modal-title">Editar etapa</h3>
+    <label>Nome</label><input id="ed-name" type="text"/>
+    <label>Meta</label><input id="ed-meta" type="number" placeholder="ex: 50"/>
+    <label>Real</label><input id="ed-real" type="number" placeholder="ex: 32"/>
+    <label>Taxa de conversão (%)</label><input id="ed-conv" type="number" min="0" max="100"/>
+    <label>Nó pai</label><select id="ed-parent"></select>
+    <div class="modal-note">💜 A taxa aparece na seta de entrada desta etapa.</div>
+    <div class="modal-btns">
+      <button class="btn btn-danger" onclick="deleteNode()">🗑 Excluir</button>
+      <button class="btn" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveEdit()">Salvar</button>
+    </div>
+  </div>
+</div>
+<script>
+function buildDefault() {
+  const ns = [{ id:1, label:'Faturamento', meta:null, real:null, conv:null, parent:null, isRoot:true }];
+  const vertentes = ['FY','POP','COMM','SALES','CANCELAMENTOS'];
+  vertentes.forEach((v, vi) => {
+    const vid = vi + 2;           // 2,3,4,5,6
+    const ab  = (vi+1)*100 + 10;  // 110,210,310,410,510
+    const fe  = (vi+1)*100 + 50;  // 150,250,350,450,550
+    ns.push({ id:vid, label:v, meta:null, real:null, conv:null, parent:1 });
+    ns.push({ id:ab,   label:'Abertura',   meta:null, real:null, conv:null, parent:vid });
+    ns.push({ id:fe,   label:'Fechamento', meta:null, real:null, conv:null, parent:vid });
+    // Abertura → etapas comerciais
+    ns.push({ id:ab+1, label:'Leads gerados',       meta:null, real:null, conv:null, parent:ab });
+    ns.push({ id:ab+2, label:'Reuniões agendadas',   meta:null, real:null, conv:null, parent:ab+1 });
+    ns.push({ id:ab+3, label:'Propostas enviadas',   meta:null, real:null, conv:null, parent:ab+2 });
+    ns.push({ id:ab+4, label:'Contratos assinados',  meta:null, real:null, conv:null, parent:ab+3 });
+    // Fechamento → etapas operacionais
+    ns.push({ id:fe+1, label:'Candidatos enviados',   meta:null, real:null, conv:null, parent:fe });
+    ns.push({ id:fe+2, label:'Candidatos entregues',  meta:null, real:null, conv:null, parent:fe+1 });
+    ns.push({ id:fe+3, label:'Candidatos aprovados',  meta:null, real:null, conv:null, parent:fe+2 });
+    ns.push({ id:fe+4, label:'Triagem de candidatos', meta:null, real:null, conv:null, parent:fe+3 });
+  });
+  return ns;
+}
+
+let nodes = buildDefault();
+let nextId = 900;
+let editingId = null;
+
+function persist() { try { localStorage.setItem('atfy_nodes', JSON.stringify(nodes)); localStorage.setItem('atfy_nid', nextId); } catch(e){} }
+function loadData() { try { const d=localStorage.getItem('atfy_nodes'); const n=localStorage.getItem('atfy_nid'); if(d){nodes=JSON.parse(d); nextId=n?parseInt(n):900;} } catch(e){} }
+
+function getIcon(l) {
+  l = l.toLowerCase();
+  if (l.includes('fatur')) return '💰';
+  if (l==='fy'||l==='pop'||l==='comm'||l==='sales'||l.includes('cancel')) return '📊';
+  if (l.includes('abertura')) return '🔓';
+  if (l.includes('fechamento')) return '🔒';
+  if (l.includes('lead')) return '🎯';
+  if (l.includes('reuni')) return '📅';
+  if (l.includes('proposta')) return '📄';
+  if (l.includes('contrato')) return '✍️';
+  if (l.includes('candidato')&&l.includes('envi')) return '📨';
+  if (l.includes('candidato')&&l.includes('entre')) return '👥';
+  if (l.includes('candidato')&&l.includes('aprov')) return '✅';
+  if (l.includes('triagem')) return '🔍';
+  return '◆';
+}
+
+function getCol(n) {
+  if (n.isRoot) return { fill:'url(#grad-root)', stroke:'#A78BFA', text:'#4C1D95', badge:'#EDE9FE' };
+  if (n.meta==null||n.real==null) return { fill:'#F8F7FF', stroke:'#A78BFA', text:'#5B21B6', badge:'#EDE9FE' };
+  const p = n.real/n.meta*100;
+  if (p>=90) return { fill:'#D1FAE5', stroke:'#059669', text:'#065F46', badge:'#A7F3D0' };
+  if (p>=60) return { fill:'#FEF3C7', stroke:'#D97706', text:'#92400E', badge:'#FDE68A' };
+  return { fill:'#FFE4E6', stroke:'#E11D48', text:'#881337', badge:'#FECDD3' };
+}
+
+function layout() {
+  const bp = {};
+  nodes.forEach(n => { const p=n.parent??'R'; if(!bp[p])bp[p]=[]; bp[p].push(n); });
+  const NW=138, NH=66, HG=20, VG=68;
+  const pos = {};
+  function sw(id) { const ch=bp[id]||[]; if(!ch.length)return NW; return ch.reduce((s,c)=>s+sw(c.id)+HG,-HG); }
+  function place(id,cx,d) {
+    pos[id]={x:cx-NW/2, y:40+d*(NH+VG), w:NW, h:NH};
+    const ch=bp[id]||[]; if(!ch.length)return;
+    const total=ch.reduce((s,c)=>s+sw(c.id)+HG,-HG);
+    let lx=cx-total/2;
+    ch.forEach(c=>{const s=sw(c.id);place(c.id,lx+s/2,d+1);lx+=s+HG;});
+  }
+  const root=nodes.find(n=>n.isRoot);
+  if(root){const tw=sw(root.id); place(root.id,Math.max(tw/2+60,900),0);}
+  return pos;
+}
+
+function render() {
+  const svg = document.getElementById('tree-svg');
+  const pos = layout();
+  let maxX=1200, maxY=500;
+  Object.values(pos).forEach(p=>{ if(p.x+p.w+60>maxX)maxX=p.x+p.w+60; if(p.y+p.h+50>maxY)maxY=p.y+p.h+50; });
+  svg.setAttribute('viewBox',`0 0 ${maxX} ${maxY}`);
+  svg.setAttribute('width','100%');
+  svg.style.minWidth = maxX + 'px';
+
+  let h = `<defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#A78BFA" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></marker>
+    <linearGradient id="grad-root" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#FDF2F8"/><stop offset="50%" stop-color="#F5F3FF"/><stop offset="100%" stop-color="#EFF6FF"/></linearGradient>
+    <linearGradient id="grad-edge" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#F472B6" stop-opacity="0.35"/><stop offset="100%" stop-color="#60A5FA" stop-opacity="0.35"/></linearGradient>
+    <filter id="sh"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#A78BFA" flood-opacity="0.1"/></filter>
+  </defs>`;
+
+  nodes.forEach(n => {
+    if(!n.parent||!pos[n.parent]||!pos[n.id])return;
+    const p=pos[n.parent],c=pos[n.id];
+    const x1=p.x+p.w/2,y1=p.y+p.h,x2=c.x+c.w/2,y2=c.y,my=(y1+y2)/2;
+    h+=`<path d="M${x1} ${y1} C${x1} ${my} ${x2} ${my} ${x2} ${y2}" fill="none" stroke="#A78BFA" stroke-width="1.8" marker-end="url(#arr)"/>`;
+    if(n.conv!=null){
+      const col=n.conv>=50?'#059669':n.conv>=30?'#D97706':'#E11D48';
+      const bg=n.conv>=50?'#D1FAE5':n.conv>=30?'#FEF3C7':'#FFE4E6';
+      h+=`<rect x="${x2-22}" y="${my-11}" width="44" height="22" rx="11" fill="${bg}" stroke="${bg}" stroke-width="1"/>
+          <text x="${x2}" y="${my+1}" text-anchor="middle" dominant-baseline="central" fill="${col}" font-family="Plus Jakarta Sans,sans-serif" font-size="10" font-weight="700">${n.conv}%</text>`;
+    }
+  });
+
+  nodes.forEach(n => {
+    if(!pos[n.id])return;
+    const {x,y,w,h:nh}=pos[n.id];
+    const col=getCol(n), cx=x+w/2;
+    const pct=(n.meta&&n.real)?Math.round(n.real/n.meta*100):null;
+    const icon=getIcon(n.label);
+    const lbl=n.label.length>13?n.label.slice(0,12)+'…':n.label;
+    const hasData=n.meta!=null&&n.real!=null;
+
+    h+=`<g class="node-g" onclick="openEdit(${n.id})" filter="url(#sh)">`;
+    h+=`<rect x="${x}" y="${y}" width="${w}" height="${nh}" rx="13" fill="${col.fill}" stroke="${col.stroke}" stroke-width="1.2"/>`;
+    if(!n.isRoot) h+=`<rect x="${x+1}" y="${y+1}" width="${w-2}" height="4" rx="3" fill="${col.stroke}" opacity="0.28"/>`;
+    h+=`<circle cx="${x+17}" cy="${y+nh/2}" r="11" fill="${col.badge}" opacity="0.85"/>`;
+    h+=`<text x="${x+17}" y="${y+nh/2+1}" text-anchor="middle" dominant-baseline="central" font-size="10">${icon}</text>`;
+    h+=`<text x="${x+32}" y="${y+(hasData?nh/2-8:nh/2)}" dominant-baseline="central" fill="${col.text}" font-family="Plus Jakarta Sans,sans-serif" font-size="11" font-weight="700">${lbl}</text>`;
+    if(hasData){
+      h+=`<text x="${x+32}" y="${y+nh/2+6}" dominant-baseline="central" fill="${col.stroke}" font-family="Plus Jakarta Sans,sans-serif" font-size="10" font-weight="500">${n.real} / ${n.meta}</text>`;
+      if(pct!=null){
+        h+=`<rect x="${x+w-38}" y="${y+7}" width="30" height="16" rx="8" fill="${col.badge}"/>`;
+        h+=`<text x="${x+w-23}" y="${y+15}" text-anchor="middle" dominant-baseline="central" fill="${col.text}" font-family="Plus Jakarta Sans,sans-serif" font-size="9" font-weight="700">${pct}%</text>`;
+      }
+      const bw=w-18,bx=x+9,by=y+nh-7;
+      const fw=Math.min(bw,bw*Math.min(pct||0,100)/100);
+      h+=`<rect x="${bx}" y="${by}" width="${bw}" height="3" rx="1.5" fill="${col.stroke}" opacity="0.15"/>`;
+      h+=`<rect x="${bx}" y="${by}" width="${fw}" height="3" rx="1.5" fill="${col.stroke}" opacity="0.7"/>`;
+    } else if(!n.isRoot){
+      h+=`<text x="${cx}" y="${y+nh-10}" text-anchor="middle" dominant-baseline="central" fill="${col.stroke}" font-family="Plus Jakarta Sans,sans-serif" font-size="9" opacity="0.5">+ adicionar dados</text>`;
+    }
+    h+=`</g>`;
+  });
+  svg.innerHTML=h;
+}
+
+function openEdit(id) {
+  editingId=id;
+  const n=nodes.find(x=>x.id===id);
+  document.getElementById('modal-title').textContent='Editar: '+n.label;
+  document.getElementById('ed-name').value=n.label;
+  document.getElementById('ed-meta').value=n.meta??'';
+  document.getElementById('ed-real').value=n.real??'';
+  document.getElementById('ed-conv').value=n.conv??'';
+  const sel=document.getElementById('ed-parent');
+  sel.innerHTML='<option value="">— sem pai (raiz) —</option>';
+  nodes.filter(x=>x.id!==id).forEach(x=>{ sel.innerHTML+=`<option value="${x.id}" ${x.id===n.parent?'selected':''}>${x.label}</option>`; });
+  document.getElementById('overlay').classList.add('open');
+}
+function closeModal(){document.getElementById('overlay').classList.remove('open');editingId=null;}
+function overlayClick(e){if(e.target.id==='overlay')closeModal();}
+function saveEdit(){
+  if(!editingId)return;
+  const n=nodes.find(x=>x.id===editingId);
+  n.label=document.getElementById('ed-name').value.trim()||n.label;
+  n.meta=parseFloat(document.getElementById('ed-meta').value)||null;
+  n.real=parseFloat(document.getElementById('ed-real').value)||null;
+  n.conv=parseFloat(document.getElementById('ed-conv').value)||null;
+  const pv=document.getElementById('ed-parent').value;
+  n.parent=pv?parseInt(pv):null; n.isRoot=!pv;
+  closeModal();persist();render();setStatus('✅ Atualizado!','ok');
+}
+function deleteNode(){
+  if(!editingId)return;
+  const n=nodes.find(x=>x.id===editingId);
+  if(n.isRoot){setStatus('⚠️ Não é possível excluir o nó raiz.','alert');closeModal();return;}
+  if(!confirm(`Excluir "${n.label}"?`))return;
+  nodes=nodes.filter(x=>x.id!==editingId);
+  nodes.forEach(x=>{if(x.parent===editingId)x.parent=n.parent;});
+  closeModal();persist();render();setStatus('🗑 Removido.','');
+}
+function addNode(){
+  const label=document.getElementById('inp-label').value.trim();
+  if(!label){setStatus('⚠️ Digite o nome da etapa.','alert');return;}
+  const meta=parseFloat(document.getElementById('inp-meta').value)||null;
+  const real=parseFloat(document.getElementById('inp-real').value)||null;
+  nodes.push({id:nextId++,label,meta,real,conv:null,parent:nodes[nodes.length-1].id,isRoot:false});
+  document.getElementById('inp-label').value='';
+  document.getElementById('inp-meta').value='';
+  document.getElementById('inp-real').value='';
+  persist();render();setStatus(`✅ "${label}" adicionada!`,'ok');
+}
+function analyzeGargalos(){
+  const issues=nodes.filter(n=>!n.isRoot&&n.meta!=null&&n.real!=null).map(n=>({label:n.label,pct:Math.round(n.real/n.meta*100),real:n.real,meta:n.meta})).sort((a,b)=>a.pct-b.pct);
+  if(!issues.length){setStatus('⚠️ Adicione metas e resultados para analisar.','alert');return;}
+  document.getElementById('gargalo-panel').style.display='block';
+  document.getElementById('gargalo-list').innerHTML=issues.map(i=>{
+    const col=i.pct>=90?'#059669':i.pct>=60?'#D97706':'#E11D48';
+    const bg=i.pct>=90?'#D1FAE5':i.pct>=60?'#FEF3C7':'#FFE4E6';
+    const icon=i.pct>=90?'✅':i.pct>=60?'⚠️':'🚨';
+    return `<div class="gargalo-item"><span style="font-size:16px">${icon}</span><span style="flex:1;font-weight:600">${i.label}</span><span style="color:#7C3AED;font-size:12px">${i.real}/${i.meta}</span><span class="gargalo-badge" style="background:${bg};color:${col}">${i.pct}%</span></div>`;
+  }).join('');
+  const worst=issues.filter(i=>i.pct<60);
+  if(worst.length)setStatus(`🚨 Crítico: ${worst.map(i=>i.label).join(', ')}}`,'alert');
+  else setStatus('✅ Nenhuma etapa crítica!','ok');
+}
+function exportData(){
+  const blob=new Blob([JSON.stringify({nodes,nextId,empresa:'Attractfy',exportedAt:new Date().toISOString()},null,2)],{type:'application/json'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download=`attractfy-${new Date().toISOString().slice(0,10)}.json`; a.click();
+  setStatus('⬇ Exportado!','ok');
+}
+function importData(event){
+  const file=event.target.files[0]; if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{try{const d=JSON.parse(e.target.result);nodes=d.nodes;nextId=d.nextId||900;persist();render();setStatus(`✅ ${nodes.length} etapas carregadas.`,'ok');}catch(err){setStatus('⚠️ Arquivo inválido.','alert');}};
+  reader.readAsText(file); event.target.value='';
+}
+function resetTree(){
+  if(!confirm('Resetar para a estrutura padrão?'))return;
+  nodes=buildDefault();nextId=900;persist();render();
+  document.getElementById('gargalo-panel').style.display='none';
+  setStatus('↺ Resetado.','');
+}
+function setStatus(msg,type){const el=document.getElementById('status');el.textContent=msg;el.className=type||'';}
+loadData();render();
+</script>
+</body>
+</html>
